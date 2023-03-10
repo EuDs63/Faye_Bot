@@ -12,7 +12,7 @@ import json
 import os
 import openai
 import textwrap
-openai.api_key="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"
+
 
 messages =[]
 messages.append({"role":"system","content":"你是一个大学学生，回答问题应简洁"})
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     #print(config)
     proxy_url = config['proxy_url'] 
     token = config['token'] 
-
+    openai.api_key=config['api_key']
     application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
 
     start_handler = CommandHandler('start',start)
