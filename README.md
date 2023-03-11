@@ -1,6 +1,12 @@
 # 历程
 去年12月的时候就想过要搭一个telegramBot,也搭出来了，但功能不是很完善，所以想趁着最近比较闲加上有一个服务器来好好做。之前的文件有点乱，就重开了一个文件夹。
 
+- 3月11日，想部署到服务器上。
+  - 先是因为pip版本太低，导致安装依赖时报错 `no matching distribution found for`；
+  - 升级python版本
+  - 运行时报错`ModuleNotFoundError: No module named '_ssl'`,尝试多种方法，未果。
+  暂时放弃，认识到配环境的困难，决定改用docker
+
 ## 学到的东西
 - 配置文件的读取
   ```python
