@@ -6,12 +6,10 @@
 - 通过api接入了ChatGPT，支持直接对话
 
 ## ToDo
-- [ ] 完善Dockerfile，docker-compose的配置
+- [ ] 学习完善Dockerfile，docker-compose的配置
 - [ ] 完善日志设置，保存聊天记录 
 - [ ] 修改代码，现在似乎是会不断把之前的记录叠加？
 - [ ] build的image过大（1g出头），将其瘦身
-
-
 
 ## 部署
 ```
@@ -33,7 +31,8 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   - 通过配置docker-compose文件来实现，但未能成效，可能是因为一些参数的问题
   - 修改Dockerfile文件，同上
   - 在Docker Desktop -> seetings -> Docker Engine修改文件后，软件一直处于卡死状态，无奈还原修改的文件
-  - 尝试在run image时添加命令，如`docker run --e httpproxy="http://172.17.0.1:7890" fayebot`，成功了，但发现若配置了httpsproxy则不行，未知其因。
+  - 尝试在run image时添加命令，如`docker run --e httpproxy="http://172.17.0.1:7890" fayebot`，成功了，但发现若配置了httpsproxy则不行，未知其因.("可能是没有给Docker配置TLS证书？")
+
 ## 学到的东西
 - 配置文件的读取
   ```python
@@ -54,7 +53,26 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 
   config_path = os.path.join(os.path.dirname(__file__),'config.json')
   ```
-- logger
 
 - Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
+
+- Docker的基本使用
+  ```docker
+  # 将build好的image上传到docker hub
+  docker login -u $username
+  docker tag $imagename $username/$imagename
+  docker push $username/$imagename
+
+  # 查看运行的container
+  docker ps
+  
+  # 查看所有的container
+  docker ps -a
+  
+  # 查看容器的日志
+  docker logs container-name
+  
+  # 删除容器
+  docker rm container-name
+  ```
 
