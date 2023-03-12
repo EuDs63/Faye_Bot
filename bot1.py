@@ -102,7 +102,8 @@ if __name__ == '__main__':
     proxy_url = config['proxy_url'] 
     token = config['token'] 
     openai.api_key=config['api_key']
-    application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
+    #application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build() #非容器
+    application = ApplicationBuilder().token(token).build() #容器
 
     start_handler = CommandHandler('start',start)
     dog_handler = CommandHandler('dog',dog)

@@ -29,3 +29,9 @@
   ```
 - logger
 
+## 部署
+```
+docker build -t fayebot .
+docker run --e httpproxy="http://host.docker.internal:7890" fayebot
+
+```
