@@ -9,6 +9,7 @@
 - [ ] 完善Dockerfile，docker-compose的配置
 - [ ] 完善日志设置，保存聊天记录 
 - [ ] 修改代码，现在似乎是会不断把之前的记录叠加？
+- [ ] build的image过大（1g出头），将其瘦身
 
 
 
@@ -55,5 +56,5 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   ```
 - logger
 
--Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
+- Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
 
