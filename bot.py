@@ -6,6 +6,8 @@
 # save : save the word
 # send : send the saved messages
 
+import traceback
+import datetime
 import datetime
 import logging
 from telegram import Update,InlineKeyboardButton, InlineKeyboardMarkup
@@ -17,12 +19,14 @@ from  telegram.ext import (
     MessageHandler,
     filters
 )
+from telegram.constants import ParseMode
 import requests
 import re
 import json
 import os
 import openai
-import logging, sys
+import sys
+import html
 
 
 messages =[]
@@ -47,6 +51,37 @@ file_handler.setLevel(logging.WARNING)
 
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.addHandler(file_handler)
+
+#error_handler
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    DEVELOPER_CHAT_ID=5405793578
+
+    """Log the error and send a telegram message to notify the developer."""
+    # Log the error before we do anything else, so we can see it even if something breaks.
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    # traceback.format_exception returns the usual python message about an exception, but as a
+    # list of strings rather than a single string, so we have to join them together.
+    tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
+    tb_string = "".join(tb_list)
+
+    # Build the message with some markup and additional information about what happened.
+    # You might need to add some logic to deal with messages longer than the 4096 character limit.
+    update_str = update.to_dict() if isinstance(update, Update) else str(update)
+    message = (
+        f"An exception was raised while handling an update\n"
+        f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
+        "</pre>\n\n"
+        f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n"
+        f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n"
+        f"<pre>{html.escape(tb_string)}</pre>"
+    )
+
+    # Finally, send the message
+    await context.bot.send_message(
+        chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML
+    )
+
 
 # start指令
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
@@ -299,5 +334,7 @@ if __name__ == '__main__':
     application.add_handler(save_handler)
     application.add_handler(send_handler)
     application.add_handler(sendChoose_handler)
+    application.add_error_handler(error_handler)
+
 
     application.run_polling()

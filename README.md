@@ -66,7 +66,14 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 
   config_path = os.path.join(os.path.dirname(__file__),'config.json')
   ```
-
+- 导出当前环境依赖包信息
+  `pip freeze > requirements.txt`
+  
+- python 虚拟环境
+  ```
+  #新建
+  python -m venv {环境名}
+  ```
 - Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
 
 - Docker的基本使用
@@ -107,6 +114,7 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
         message = "\n".join(messages)
   ```
 - inlineKeyboard 的使用
+
 
 ## 参考
 - [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)
