@@ -68,7 +68,7 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   ```
 - 导出当前环境依赖包信息
   `pip freeze > requirements.txt`
-  
+
 - python 虚拟环境
   ```
   #新建
@@ -119,3 +119,5 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 ## 参考
 - [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)
 - [conversationbot.py](https://docs.python-telegram-bot.org/en/stable/examples.conversationbot.html)
+- [errorhandlerbot.py](https://docs.python-telegram-bot.org/en/stable/examples.errorhandlerbot.html)
+- [CallbackQuery](https://docs.python-telegram-bot.org/en/stable/telegram.callbackquery.html)
