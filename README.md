@@ -4,13 +4,17 @@
 基于python的telegram bot，现支持功能
 - /dog 返回一张随机的狗的照片
 - 通过api接入了ChatGPT，支持直接对话
+- /save : save the word
+- /send : send the saved messages
 
 ## ToDo
 - [ ] 学习完善Dockerfile，docker-compose的配置
 - [ ] 完善日志设置，保存聊天记录 
 - [ ] 修改代码，现在似乎是会不断把之前的记录叠加？
 - [ ] build的image过大（1g出头），将其瘦身
-- [ ] 添加指令`\save` 保存其后的文字，并发布到我的博客中
+- [x] 添加指令`\save` 保存其后的文字
+- [ ] 当save.json每次有改变时，更新到博客上
+- [ ] 模块化
 
 ## 部署
 ```
@@ -33,6 +37,14 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   - 修改Dockerfile文件，同上
   - 在Docker Desktop -> seetings -> Docker Engine修改文件后，软件一直处于卡死状态，无奈还原修改的文件
   - 尝试在run image时添加命令，如`docker run --e httpproxy="http://172.17.0.1:7890" fayebot`，成功了，但发现若配置了httpsproxy则不行，未知其因.("可能是没有给Docker配置TLS证书？")
+- 3月22日，添加指令/save,/send,遇到的问题有
+  - json文件的编码格式
+  - 在/save指令时，我采用了一个比较笨的方法，就是每次存之前都要先读一遍`save.json`,因为这样才能保证格式。想了下，有两个改进方法：
+    - 打开`save.json`文件时，移动指针到倒二行，在之后写入文件
+    - 使用数据库
+  - 在/send指令中，我希望设计成：用户有两种选择，直接输出所存储的信息或发送save.json文件，刚开始我看的是[conversationbot.py](https://docs.python-telegram-bot.org/en/stable/examples.conversationbot.html),所以思路是通过ConversationHandler来实现，但是这样的话其实相当于设置快捷键，让用户点击输入信息到对话中，因此会影响到gpt接口的功能，虽然也有解决方法，就是设置正则，选择以message和file开头的，但是这样比较丑陋，所以我采用了另一种方式。
+  - 第二种方式是inlinekeyboard，在判断后调用相关函数时没绕过来，开始的时候是照着例子里写的，但后来根据实际情况，写成`await send_file(update,context)await send_file(update,context)`,就好了
+
 
 ## 学到的东西
 - 配置文件的读取
@@ -76,4 +88,26 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   # 删除容器
   docker rm container-name
   ```
+- json文件的读写
+  ```python
+  import json
 
+  #写入
+  with open(save_path,"a",encoding='utf-8') as f:
+    f.write(json.dumps(data,ensure_ascil=False,indent=2))
+    f.write('\n')
+
+  #读取
+  with open(save_path,'r',encoding='utf-8') as f:
+    data = json.load(f)
+    messages =[]
+    for idx, obj in enumerate(data):
+        messages.append(f"{idx+1}. {obj['text']}")
+    if messages:
+        message = "\n".join(messages)
+  ```
+- inlineKeyboard 的使用
+
+## 参考
+- [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)
+- [conversationbot.py](https://docs.python-telegram-bot.org/en/stable/examples.conversationbot.html)
