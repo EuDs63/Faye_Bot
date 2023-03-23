@@ -8,21 +8,38 @@
 - /send : send the saved messages
 
 ## ToDo
-- [ ] 学习完善Dockerfile，docker-compose的配置
+- [x] 学习完善Dockerfile，docker-compose的配置
 - [ ] 完善日志设置，保存聊天记录 
 - [ ] 修改代码，现在似乎是会不断把之前的记录叠加？
 - [ ] build的image过大（1g出头），将其瘦身
 - [x] 添加指令`\save` 保存其后的文字
 - [ ] 当save.json每次有改变时，更新到博客上
 - [ ] 模块化
+- [ ] file_log 有问题，无法正确log
+- [ ] 在config.json中设置是否使用gpt
 
 ## 部署
+提供了两种方法
+
+- 自行编译
 ```
+# 自行编译
 docker build -t fayebot .
 # Windows系统
 # docker run --e httpproxy="http://host.docker.internal:7890" fayebot 
 # Linux 系统
 docker run --e httpproxy="http://172.17.0.1:7890" fayebot
+```
+
+- 使用docker-compose
+```
+mkdir Faye_Bot
+cd Faye_Bot
+wget https://raw.githubusercontent.com/EuDs63/Faye_Bot/master/docker-compose.yml
+vim save.json
+vim warning.log
+vim config.json # 内容参见config.json.example
+docker-compose up -d
 ```
 ## 历程
 去年12月的时候就想过要搭一个telegramBot,也搭出来了，但功能不是很完善，所以想趁着最近比较闲加上有一个服务器来好好做。之前的文件有点乱，就重开了一个文件夹。
@@ -36,7 +53,7 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   - 通过配置docker-compose文件来实现，但未能成效，可能是因为一些参数的问题
   - 修改Dockerfile文件，同上
   - 在Docker Desktop -> seetings -> Docker Engine修改文件后，软件一直处于卡死状态，无奈还原修改的文件
-  - 尝试在run image时添加命令，如`docker run --e httpproxy="http://172.17.0.1:7890" fayebot`，成功了，但发现若配置了httpsproxy则不行，未知其因.("可能是没有给Docker配置TLS证书？")
+  - 尝试在run image时添加命令，如`docker run --env httpproxy="http://172.17.0.1:7890" fayebot`，成功了，但发现若配置了httpsproxy则不行，未知其因.("可能是没有给Docker配置TLS证书？")
 - 3月22日，添加指令/save,/send,遇到的问题有
   - json文件的编码格式
   - 在/save指令时，我采用了一个比较笨的方法，就是每次存之前都要先读一遍`save.json`,因为这样才能保证格式。想了下，有两个改进方法：
@@ -44,6 +61,17 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
     - 使用数据库
   - 在/send指令中，我希望设计成：用户有两种选择，直接输出所存储的信息或发送save.json文件，刚开始我看的是[conversationbot.py](https://docs.python-telegram-bot.org/en/stable/examples.conversationbot.html),所以思路是通过ConversationHandler来实现，但是这样的话其实相当于设置快捷键，让用户点击输入信息到对话中，因此会影响到gpt接口的功能，虽然也有解决方法，就是设置正则，选择以message和file开头的，但是这样比较丑陋，所以我采用了另一种方式。
   - 第二种方式是inlinekeyboard，在判断后调用相关函数时没绕过来，开始的时候是照着例子里写的，但后来根据实际情况，写成`await send_file(update,context)await send_file(update,context)`,就好了
+- 3月23日，尝试配置docker-compose，遇到两个问题：
+  - 和之前一样，还是在网络问题上耽搁最久。最终解决方法是配置了
+    ```
+      environment:
+        - http_proxy=http://172.17.0.1:7890
+        - https_proxy=http://172.17.0.1:7890
+    ```
+  但这与我上次的解决方式不同，而且值得一提的是，我尝试删除`- https_proxy=http://172.17.0.1:7890`一栏，但运行不成功。
+  - 挂载volume，这比较顺利，但实际运行出现了问题，通过报错信息排查后发现了问题是：我在文件夹中新建了`save.json`,但这是空的，而我的代码里只判断了该文件是否存在，当其存在时，默认其中是有内容的。添加一个判断即可。
+
+
 
 
 ## 学到的东西
@@ -89,6 +117,9 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   # 查看所有的container
   docker ps -a
   
+  # 查看container的配置情况
+  docker inspect container-name
+
   # 查看容器的日志
   docker logs container-name
   
@@ -97,6 +128,8 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 
   # 删除镜像
   docker rmi imagename
+
+  # 查看所有的container
   ```
 - json文件的读写
   ```python
@@ -115,6 +148,11 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
         messages.append(f"{idx+1}. {obj['text']}")
     if messages:
         message = "\n".join(messages)
+
+  #内容判断是否为空
+  file_size = os.stat(save_path).st_size
+  if file_size == 0:
+    print("file is empty")
   ```
 - inlineKeyboard 的使用
 

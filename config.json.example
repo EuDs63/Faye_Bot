@@ -1,0 +1,5 @@
+{
+    "token": "{bot_token}",
+    "proxy_url" : "{proxy_url}",
+    "api_key" : "{gpt api_key}"
+}

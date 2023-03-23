@@ -158,8 +158,13 @@ async def save_text(update:Update,context:ContextTypes.DEFAULT_TYPE):
         # 读取文件中的现有数据
          save_path = os.path.join(root_path, 'save.json')
          if os.path.exists(save_path):
-            with open(save_path, "r",encoding='utf-8') as read_file:
-                data = json.load(read_file)
+            file_size = os.stat(save_path).st_size
+            # 判断文件大小，若文件为空，则应令data = []. 
+            if file_size == 0:
+                data = []
+            else:
+                with open(save_path, "r",encoding='utf-8') as read_file:
+                    data = json.load(read_file)
          else:
             data = []
 
