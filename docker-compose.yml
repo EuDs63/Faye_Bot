@@ -1,10 +1,12 @@
 version: '3'
 services:
   faye:
-    image: euds63/fayebot
+    image: euds63/fayebot:latest
     container_name: Faye_Bot
-    # network_mode: "host"
     environment:
-      httpproxy="http://172.17.0.1:7890"
+      - http_proxy=http://172.17.0.1:7890
+      - https_proxy=http://172.17.0.1:7890
     volumes:
-      -"./config.json"
+      - "./config.json:/app/config.json"
+      - "./save.json:/app/save.json"
+      - "./warning.json:/app/warning.json"

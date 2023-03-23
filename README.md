@@ -94,6 +94,9 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
   
   # 删除容器
   docker rm container-name
+
+  # 删除镜像
+  docker rmi imagename
   ```
 - json文件的读写
   ```python
