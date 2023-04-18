@@ -70,10 +70,12 @@ docker-compose up -d
     ```
   但这与我上次的解决方式不同，而且值得一提的是，我尝试删除`- https_proxy=http://172.17.0.1:7890`一栏，但运行不成功。
   - 挂载volume，这比较顺利，但实际运行出现了问题，通过报错信息排查后发现了问题是：我在文件夹中新建了`save.json`,但这是空的，而我的代码里只判断了该文件是否存在，当其存在时，默认其中是有内容的。添加一个判断即可。
-
-
-
-
+  - 4月18日，做了这几件事：
+    - openAI注册账号时送的余额过期了，所以就注释掉了相关代码
+    - 将bot.py挂载出来，这样以后在不需要额外依赖的时候就可以不用重新更新容器了。
+    - 添加了新指令`/poetry`,使用的是`https://v1.jinrishici.com/all`的api。可以发送随机的一句古诗词名句
+    - 修改了日志的配置，之前日志储存有些问题
+---
 ## 学到的东西
 - 配置文件的读取
   ```python
@@ -155,7 +157,27 @@ docker-compose up -d
     print("file is empty")
   ```
 - inlineKeyboard 的使用
+- 日志的设置
+  ```python
+  # 日志的配置
+  logger = logging.getLogger(__name__)
+  logging.basicConfig(
+      format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+      level=logging.INFO,
+  )
+  formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s') 
 
+  file_handler = logging.FileHandler(filename=warning_path,mode='a',encoding='utf-8')
+  file_handler.setFormatter(formatter)
+  file_handler.setLevel(logging.INFO)
+
+  stream_handler = logging.StreamHandler(sys.stdout)
+  stream_handler.setFormatter(formatter)  
+  stream_handler.setLevel(logging.WARNING)
+
+  logger.addHandler(stream_handler)
+  logger.addHandler(file_handler)
+  ```
 
 ## 参考
 - [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)

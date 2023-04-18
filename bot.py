@@ -5,6 +5,7 @@
 # dog : 发送一张狗的图片
 # save : save the word
 # send : send the saved messages
+# poestry : 发送一句诗
 
 import traceback
 import datetime
@@ -28,12 +29,13 @@ import openai
 import sys
 import html
 
-
+# openAI相关
 messages =[]
 messages.append({"role":"system","content":"你是一个富有经验的大学老师，回答问题应简洁且准确"})
 
 # 路径
 root_path = os.path.dirname(__file__)
+warning_path = os.path.join(root_path,'warning.log')
 
 # 日志的配置
 logger = logging.getLogger(__name__)
@@ -42,14 +44,17 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO,
 )
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s') 
 
-warning_path = os.path.join(root_path,'warning.log')
 file_handler = logging.FileHandler(filename=warning_path,mode='a',encoding='utf-8')
-file_handler.setFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setLevel(logging.WARNING)
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.INFO)
 
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)  
+stream_handler.setLevel(logging.WARNING)
 
-logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
 #error_handler
@@ -82,14 +87,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML
     )
 
-
-# start指令
-async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
-    chat_id=update.effective_chat.id
-    info ="{} send a command '/start'".format(chat_id)
-    logger.info(info)
-    await context.bot.send_message(chat_id=chat_id,text="Nice to meet you!")
-
 #实现dog指令
 ## 从random.dog中获取url
 def get_url():
@@ -112,6 +109,31 @@ async def dog(update:Update,context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
     logger.info(f"{chat_id},send a command '/dog'")
     await context.bot.send_photo(chat_id = chat_id,photo=url)
+
+# 实现诗句指令
+## 目前还只有古诗，下一步计划是添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文
+## 从https://v1.jinrishici.com/获得古诗
+DEFAULT_SENTENCE = "不惜千金买宝刀\r\n貂裘换酒也堪豪\r\n"
+SENTENCE_API = "https://v1.jinrishici.com/all"
+def get_one_sentence():
+    try:
+        r = requests.get(SENTENCE_API).json()
+        logger.info('call SENTENCE_API')
+        return r
+    except:
+        logger.error("get SENTENCE_API wrong")
+        return DEFAULT_SENTENCE
+    
+## /poetry指令
+async def poetry(update:Update,context:ContextTypes.DEFAULT_TYPE):
+    r = get_one_sentence()
+    content = r['content']
+    title = r['origin']
+    author = r['author']
+    reply = f"\"{content}\"\n作者： {author}\n题目： {title}"
+    chat_id = update.message.chat_id
+    logger.info(f"{chat_id},send a command '/poetry'")
+    await context.bot.send_message(chat_id=chat_id,text=reply)
 
 # 接入gpt
 async def echo(update:Update,context:ContextTypes.DEFAULT_TYPE):
@@ -186,7 +208,7 @@ async def save_text(update:Update,context:ContextTypes.DEFAULT_TYPE):
          reply = "save successfully , saved message is "+save_message
 
     except Exception as e:
-        print("Something went wrong!")
+        #print("Something went wrong!")
         logger.error("encounter error {} when save {}".format(e,text))
 
     # 回复
@@ -294,6 +316,8 @@ async def send_file(update:Update,context:ContextTypes.DEFAULT_TYPE):
         print("Something went wrong!")
         logger.error("encounter error {} when send file".format(e))
     
+ 
+
 # async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 #     """Cancels and ends the conversation."""
 #     user = update.message.from_user
@@ -312,17 +336,17 @@ if __name__ == '__main__':
     #print(config)
     proxy_url = config['proxy_url'] 
     token = config['token'] 
-    openai.api_key=config['api_key']
+
+    #openai.api_key=config['api_key']
     #application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build() #非容器
     application = ApplicationBuilder().token(token).build() #容器
 
-    start_handler = CommandHandler('start',start)
     dog_handler = CommandHandler('dog',dog)
-    echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND),echo)
+    #echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND),echo)
     save_handler = CommandHandler('save',save_text)
     send_handler = CommandHandler('send',send)
     sendChoose_handler = CallbackQueryHandler(send_choose)
-
+    poetry_handler = CommandHandler('poetry',poetry)
     # send_handler = ConversationHandler(
     #     entry_points= [CommandHandler("send",send)],
     #     states={
@@ -331,14 +355,12 @@ if __name__ == '__main__':
     #     fallbacks=[CommandHandler("cancel", cancel)],
     # )
 
-
-
-    application.add_handler(start_handler)
     application.add_handler(dog_handler)
-    application.add_handler(echo_handler)
+    #application.add_handler(echo_handler) #余额过期，无法使用
     application.add_handler(save_handler)
     application.add_handler(send_handler)
     application.add_handler(sendChoose_handler)
+    application.add_handler(poetry_handler)
     application.add_error_handler(error_handler)
 
 
