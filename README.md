@@ -6,17 +6,21 @@
 - 通过api接入了ChatGPT，支持直接对话
 - /save : save the word
 - /send : send the saved messages
+- /poestry : 发送一句诗
 
 ## ToDo
 - [x] 学习完善Dockerfile，docker-compose的配置
 - [ ] 完善日志设置，保存聊天记录 
-- [ ] 修改代码，现在似乎是会不断把之前的记录叠加？
+- ~~修改代码，现在似乎是会不断把之前的记录叠加？~~
 - [ ] build的image过大（1g出头），将其瘦身
 - [x] 添加指令`\save` 保存其后的文字
 - [ ] 当save.json每次有改变时，更新到博客上
 - [ ] 模块化
-- [ ] file_log 有问题，无法正确log
+- [x] file_log 有问题，无法正确log
 - [ ] 在config.json中设置是否使用gpt
+- [ ] 扩展poestry指令的功能，添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文
+- [ ] 使用[bing画图](https://www.bing.com/create)，给诗句配图
+- [ ] 定时发送诗句
 
 ## 部署
 提供了两种方法
@@ -31,7 +35,7 @@ docker build -t fayebot .
 docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 ```
 
-- 使用docker-compose
+- 使用docker-compose(推荐)
 ```
 mkdir Faye_Bot
 cd Faye_Bot
@@ -42,6 +46,7 @@ vim warning.log
 vim config.json # 内容参见config.json.example
 docker-compose up -d
 ```
+
 ## 历程
 去年12月的时候就想过要搭一个telegramBot,也搭出来了，但功能不是很完善，所以想趁着最近比较闲加上有一个服务器来好好做。之前的文件有点乱，就重开了一个文件夹。
 
@@ -71,12 +76,13 @@ docker-compose up -d
     ```
   但这与我上次的解决方式不同，而且值得一提的是，我尝试删除`- https_proxy=http://172.17.0.1:7890`一栏，但运行不成功。
   - 挂载volume，这比较顺利，但实际运行出现了问题，通过报错信息排查后发现了问题是：我在文件夹中新建了`save.json`,但这是空的，而我的代码里只判断了该文件是否存在，当其存在时，默认其中是有内容的。添加一个判断即可。
-  - 4月18日，做了这几件事：
-    - openAI注册账号时送的余额过期了，所以就注释掉了相关代码
-    - 将bot.py挂载出来，这样以后在不需要额外依赖的时候就可以不用重新更新容器了。
-    - 添加了新指令`/poetry`,使用的是`https://v1.jinrishici.com/all`的api。可以发送随机的一句古诗词名句
-    - 修改了日志的配置，之前日志储存有些问题
+- 4月18日，做了这几件事：
+  - openAI注册账号时送的余额过期了，所以就注释掉了相关代码
+  - 将bot.py挂载出来，这样以后在不需要额外依赖的时候就可以不用重新更新容器了。
+  - 添加了新指令`/poetry`,使用的是`https://v1.jinrishici.com/all`的api。可以发送随机的一句古诗词名句
+  - 修改了日志的配置，之前日志储存有些问题(在本地调试后要使用docker部署在服务器时创建了一个warning.json文件夹。排查后发现是我的docker-compose.yml文件写错了。*发现修改docker-compose.yml后需删除镜像，并重新拉取*)
 ---
+
 ## 学到的东西
 - 配置文件的读取
   ```python
