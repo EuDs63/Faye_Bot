@@ -6,7 +6,16 @@
 - 通过api接入了ChatGPT，支持直接对话
 - /save : save the word
 - /send : send the saved messages
-- /poestry : 发送一句诗
+- /poetry : 发送一句诗
+
+## command
+```
+dog - send a dog picture
+save - save the word
+send - send the saved messages
+poetry - send a poestry
+```
+
 
 ## ToDo
 - [x] 学习完善Dockerfile，docker-compose的配置
