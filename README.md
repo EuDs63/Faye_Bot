@@ -36,6 +36,7 @@ docker run --e httpproxy="http://172.17.0.1:7890" fayebot
 mkdir Faye_Bot
 cd Faye_Bot
 wget https://raw.githubusercontent.com/EuDs63/Faye_Bot/master/docker-compose.yml
+wget https://raw.githubusercontent.com/EuDs63/Faye_Bot/master/bot.py
 vim save.json
 vim warning.log
 vim config.json # 内容参见config.json.example

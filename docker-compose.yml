@@ -9,5 +9,5 @@ services:
     volumes:
       - "./config.json:/app/config.json"
       - "./save.json:/app/save.json"
-      - "./warning.json:/app/warning.json"
+      - "./warning.log:/app/warning.log"
       - "./bot.py:/app/bot.py"

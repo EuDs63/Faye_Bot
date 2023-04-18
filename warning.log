@@ -1,18 +1,2 @@
-2023-04-18 15:23:38,015 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:23:38,015 - __main__ - INFO - 5405793578,send a command '/poetry'
-5405793578,send a command '/dog'
-try to send saved message to 5405793578
-2023-04-18 15:29:18,843 - __main__ - INFO - 5405793578,send a command '/dog'
-2023-04-18 15:29:36,880 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:29:36,880 - __main__ - INFO - 5405793578,send a command '/poetry'
-2023-04-18 15:30:28,974 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:30:28,974 - __main__ - INFO - 5405793578,send a command '/poetry'
-2023-04-18 15:31:02,740 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:31:02,740 - __main__ - INFO - 5405793578,send a command '/poetry'
-2023-04-18 15:32:01,462 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:32:01,462 - __main__ - INFO - 5405793578,send a command '/poetry'
-2023-04-18 15:32:08,312 - __main__ - INFO - call SENTENCE_API
-2023-04-18 15:32:08,312 - __main__ - INFO - 5405793578,send a command '/poetry'
-2023-04-18 15:32:12,847 - __main__ - INFO - 5405793578,send a command '/dog'
-2023-04-18 15:32:23,657 - __main__ - INFO - try to send saved message to 5405793578
-2023-04-18 16:23:28,659 - __main__ - INFO - 5405793578,send a command '/dog'
+2023-04-18 16:54:19,943 - __main__ - INFO - call SENTENCE_API
+2023-04-18 16:54:19,943 - __main__ - INFO - 5405793578,send a command '/poetry'
