@@ -7,13 +7,15 @@
 - /save : save the word
 - /send : send the saved messages
 - /poetry : 发送一句诗
+- /en_poetry : 发送一首随机的英文诗
 
 ## command
 ```
 dog - send a dog picture
 save - save the word
 send - send the saved messages
-poetry - send a poestry
+poetry - send a poem
+en_poetry - send a random English poem
 ```
 
 
@@ -27,7 +29,8 @@ poetry - send a poestry
 - [ ] 模块化
 - [x] file_log 有问题，无法正确log
 - [ ] 在config.json中设置是否使用gpt
-- [ ] 扩展poestry指令的功能，添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文
+- ~~[ ] 扩展poestry指令的功能，添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文~~
+- [x] 添加指令 可以返回一首随机的英文诗
 - [ ] 使用[bing画图](https://www.bing.com/create)，给诗句配图
 - [ ] 定时发送诗句
 - [ ] 增强稳定性。bot会因为网络不够稳定导致需要重启。我目前的解决方法是使用crontab来定时重启，但觉得应该有更好的方法。
@@ -91,6 +94,14 @@ docker-compose up -d
   - 将bot.py挂载出来，这样以后在不需要额外依赖的时候就可以不用重新更新容器了。
   - 添加了新指令`/poetry`,使用的是`https://v1.jinrishici.com/all`的api。可以发送随机的一句古诗词名句
   - 修改了日志的配置，之前日志储存有些问题(在本地调试后要使用docker部署在服务器时创建了一个warning.json文件夹。排查后发现是我的docker-compose.yml文件写错了。*发现修改docker-compose.yml后需删除镜像，并重新拉取*)
+- 4月19日，添加了新指令`\en_poetry` : 发送一首随机的英文诗
+  在找api的时候花了些时间，刚开始找的是[https://www.poetry.com/poetry_api.php](https://www.poetry.com/poetry_api.php),但填写使用申请后没有回复。
+  
+  然后看到了[Poems API](https://poems.one/api/poem/#),它的页面做的比较精美，但文档之类的做得不是太完善。
+  
+  最后使用的是[PoetryDB](https://poetrydb.org/index.html)。免费，可供选择的选项多，接口文档也很完善，感谢这个项目。
+
+  另外，我本来是打算将古诗和英文诗指令合起来，然后再随机输出的。但现在觉得分开来的话还是比较好点。译文方面还没找到比较好的库，又不愿意用机翻的，就暂且搁置，随缘吧。
 ---
 
 ## 学到的东西
@@ -195,6 +206,8 @@ docker-compose up -d
   logger.addHandler(stream_handler)
   logger.addHandler(file_handler)
   ```
+- 字符串的拼接
+  `f_line = '\n'.join(lines)`
 
 ## 参考
 - [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)

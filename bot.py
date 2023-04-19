@@ -5,8 +5,10 @@
 # dog : 发送一张狗的图片
 # save : save the word
 # send : send the saved messages
-# poestry : 发送一句诗
+# poetry : 发送一句诗
+# en_poetry : 发送一首随机的英文诗
 
+import random
 import traceback
 import datetime
 import datetime
@@ -112,8 +114,12 @@ async def dog(update:Update,context: ContextTypes.DEFAULT_TYPE):
 
 # 实现诗句指令
 ## 目前还只有古诗，下一步计划是添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文
-## 从https://v1.jinrishici.com/获得古诗
-DEFAULT_SENTENCE = "不惜千金买宝刀\r\n貂裘换酒也堪豪\r\n"
+## 从https://v1.jinrishici.com/获取一句随机古诗
+DEFAULT_SENTENCE = {
+  "content" : "黄河西来决昆仑，咆哮万里触龙门。",
+  "origin" : "公无渡河",
+  "author" : "李白"
+}
 SENTENCE_API = "https://v1.jinrishici.com/all"
 def get_one_sentence():
     try:
@@ -133,6 +139,54 @@ async def poetry(update:Update,context:ContextTypes.DEFAULT_TYPE):
     reply = f"\"{content}\"\n作者： {author}\n题目： {title}"
     chat_id = update.message.chat_id
     logger.info(f"{chat_id},send a command '/poetry'")
+    await context.bot.send_message(chat_id=chat_id,text=reply)
+
+## 从https://poetrydb.org随机获取一首英文诗，行数在14行以内
+DEFAULT_POEM = [
+  {
+    "title": "Ozymandias",
+    "author": "Percy Bysshe Shelley",
+    "lines": [
+      "I met a traveller from an antique land",
+      "Who said: Two vast and trunkless legs of stone",
+      "Stand in the desert...Near them, on the sand,",
+      "Half sunk, a shattered visage lies, whose frown,",
+      "And wrinkled lip, and sneer of cold command,",
+      "Tell that its sculptor well those passions read",
+      "Which yet survive, stamped on these lifeless things,",
+      "The hand that mocked them, and the heart that fed:",
+      "And on the pedestal these words appear:",
+      "'My name is Ozymandias, king of kings:",
+      "Look on my works, ye Mighty, and despair!'",
+      "Nothing beside remains. Round the decay",
+      "Of that colossal wreck, boundless and bare",
+      "The lone and level sands stretch far away."
+    ],
+    "linecount": "14"
+  }
+]
+
+def get_poem():
+    try:
+        linecount = random.randint(4,14)
+        POEM_API = f"https://poetrydb.org/random,linecount/1;{linecount}"
+        r = requests.get(POEM_API).json()
+        logger.info("call POEM_API successfully!")
+        return r
+    except:
+        logger.info("get POEM_API wrong")
+        return DEFAULT_POEM
+
+## /en_poetry指令
+async def en_poetry(update:Update,context:ContextTypes.DEFAULT_TYPE):
+    r = get_poem()
+    lines = r[0]['lines']
+    title = r[0]['title']
+    author = r[0]['author']
+    f_line = '\n'.join(lines)
+    reply = f"\"{f_line}\"\nauthor: {author}\ntitle： {title}"
+    chat_id = update.message.chat_id
+    logger.info(f"{chat_id},send a command '/en_poetry'")
     await context.bot.send_message(chat_id=chat_id,text=reply)
 
 # 接入gpt
@@ -347,6 +401,7 @@ if __name__ == '__main__':
     send_handler = CommandHandler('send',send)
     sendChoose_handler = CallbackQueryHandler(send_choose)
     poetry_handler = CommandHandler('poetry',poetry)
+    en_poetry_handler = CommandHandler('en_poetry',en_poetry)
     # send_handler = ConversationHandler(
     #     entry_points= [CommandHandler("send",send)],
     #     states={
@@ -361,6 +416,7 @@ if __name__ == '__main__':
     application.add_handler(send_handler)
     application.add_handler(sendChoose_handler)
     application.add_handler(poetry_handler)
+    application.add_handler(en_poetry_handler)
     application.add_error_handler(error_handler)
 
 

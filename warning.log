@@ -1,2 +1,6 @@
 2023-04-18 16:54:19,943 - __main__ - INFO - call SENTENCE_API
 2023-04-18 16:54:19,943 - __main__ - INFO - 5405793578,send a command '/poetry'
+2023-04-19 14:12:02,731 - __main__ - INFO - call POEM_API successfully!
+2023-04-19 14:12:02,732 - __main__ - INFO - 5405793578,send a command '/en_poetry'
+2023-04-19 14:12:11,018 - __main__ - INFO - call POEM_API successfully!
+2023-04-19 14:12:11,019 - __main__ - INFO - 5405793578,send a command '/en_poetry'
