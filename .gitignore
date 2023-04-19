@@ -6,4 +6,5 @@
 *.db
 *.json
 *.yaml
+*.log
 
