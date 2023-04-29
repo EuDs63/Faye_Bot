@@ -102,6 +102,16 @@ docker-compose up -d
   最后使用的是[PoetryDB](https://poetrydb.org/index.html)。免费，可供选择的选项多，接口文档也很完善，感谢这个项目。
 
   另外，我本来是打算将古诗和英文诗指令合起来，然后再随机输出的。但现在觉得分开来的话还是比较好点。译文方面还没找到比较好的库，又不愿意用机翻的，就暂且搁置，随缘吧。
+- 4月28日 我前几天是使用crontab来定时运行重启的脚本。但没有效果。开始的时候我以为是我命令没有设置好，就在脚本里加了一行`date >> restart.txt`,使其每次运行都会打印日期到restart.txt里。却发现这个脚本是有在运行的。后来看`/var/spool/mail`里的报错信息才找到问题所在。报错信息是这样的`docker-compose: command not found`。问了Claude后才知道这是因为crontab运行的环境并不包含docker-compose命令,需要对路径进行指定。最终将脚本修改成如下即可。
+  ```bash
+  # restart FayeBot3.0
+  cd /usr/local/project/telegramBot/Faye_Bot3.0/
+  PATH=$PATH:/usr/local/bin/
+  docker-compose restart  
+  docker-compose logs
+  date >> restart.txt
+  ```
+
 ---
 
 ## 学到的东西
