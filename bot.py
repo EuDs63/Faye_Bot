@@ -289,8 +289,8 @@ async def save_text(update:Update,context:ContextTypes.DEFAULT_TYPE):
 #inline的方式,给用户提供选择
 async def send(update:Update,context:ContextTypes.DEFAULT_TYPE):
     choose_keyboard = [
-        [InlineKeyboardButton("message", callback_data="1")],
-        [InlineKeyboardButton("file", callback_data="2")],
+        [InlineKeyboardButton("message", callback_data="send_message")],
+        [InlineKeyboardButton("file", callback_data="send_file")],
     ]
 
     reply_markup = InlineKeyboardMarkup(choose_keyboard)
@@ -316,12 +316,12 @@ async def send_choose(update:Update,context:ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data
 
-    if data =='1':
+    if data =='send_message':
         await query.answer()
         await query.edit_message_text(text="Sending message...")
         await send_message(update,context)
 
-    elif data =='2':
+    elif data =='send_file':
         await query.answer()
         await query.edit_message_text(text="Sending file...")
         await send_file(update,context)
@@ -339,18 +339,60 @@ async def send_message(update:Update,context:ContextTypes.DEFAULT_TYPE):
             with open(save_path, "r",encoding='utf-8') as read_file:
                 messages = []
                 data = json.load(read_file)
-                for index,obj in enumerate(data):
-                    messages.append(f"{index+1}. {obj['text']}")
-                text = '\n'.join(messages)
-            # await context.bot.sendMessage(chat_id=chat_id,text=json.dumps(text, ensure_ascii=False)) #这里之前忘记修改了，导致输出有问题
-            await context.bot.sendMessage(chat_id=chat_id,text=text)
+                num_messages = len(data)
+                display_count = 10 # 每十条输出一次
+                pages = num_messages//display_count
+                real_pages = pages if ((num_messages%display_count)==0) else (pages+1)
+                # 根据所选的页数展示相关的记录
+                choose_page = 1
+                off = 1 + display_count * (choose_page-1)
+                for i in range(off,off+display_count if (choose_page<real_pages) else num_messages):
+                    messages.append(f"{i}. {data[i]['text']}")
+                text =  '\n'.join(messages)
 
+                keyboard = [[InlineKeyboardButton(f"{i}", callback_data="page"+str(i)) for i in range(1, real_pages+1)]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+
+            #await context.bot.sendMessage(chat_id=chat_id,text=text)
+            await context.bot.sendMessage(chat_id=chat_id,text=text,reply_markup=reply_markup)
          else:
             await context.bot.sendMessage(chat_id=chat_id,text="sorry,you havn't save anything")
             
     except Exception as e:
         print("Something went wrong!")
         logger.error("encounter error {} when send saved message".format(e))
+# 实现分页功能
+async def send_message_choose(update:Update,context:ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    choose_page = int(query.data[4])
+
+    if(choose_page>0):
+        save_path = os.path.join(root_path, 'save.json')
+        with open(save_path, "r",encoding='utf-8') as read_file:
+            messages = []
+            data = json.load(read_file)
+            num_messages = len(data)
+            display_count = 10 # 每十条输出一次
+            pages = num_messages//display_count
+            real_pages = pages if ((num_messages%display_count)==0) else (pages+1)
+            # 根据所选的页数展示相关的记录
+            off = 1 + display_count * (choose_page-1)
+            for i in range(off,off+display_count if (choose_page<real_pages) else num_messages):
+                messages.append(f"{i}. {data[i]['text']}")
+                text =  '\n'.join(messages)
+
+            keyboard = [
+                [
+                    InlineKeyboardButton(f"{i}", callback_data="page"+str(i)) for i in range(1, real_pages+1)       
+                ],
+                [InlineKeyboardButton("over", callback_data="page"+str(0))], 
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(text=text,reply_markup=reply_markup)
+    else:
+        await query.edit_message_text(text="send_message over. Bye!")
+        
+    await query.answer()
 
 #send_save 发送储存的save_json文件
 async def send_file(update:Update,context:ContextTypes.DEFAULT_TYPE):
@@ -400,6 +442,8 @@ if __name__ == '__main__':
     save_handler = CommandHandler('save',save_text)
     send_handler = CommandHandler('send',send)
     sendChoose_handler = CallbackQueryHandler(send_choose)
+    send_message_choose_handler = CallbackQueryHandler(send_message_choose,pattern="^page")
+
     poetry_handler = CommandHandler('poetry',poetry)
     en_poetry_handler = CommandHandler('en_poetry',en_poetry)
     # send_handler = ConversationHandler(
@@ -414,10 +458,10 @@ if __name__ == '__main__':
     #application.add_handler(echo_handler) #余额过期，无法使用
     application.add_handler(save_handler)
     application.add_handler(send_handler)
+    application.add_handler(send_message_choose_handler)
     application.add_handler(sendChoose_handler)
     application.add_handler(poetry_handler)
     application.add_handler(en_poetry_handler)
     application.add_error_handler(error_handler)
-
 
     application.run_polling()

@@ -111,10 +111,11 @@ docker-compose up -d
   docker-compose logs
   date >> restart.txt
   ```
-
+- 5月2日，由于我保存的文字已经有一定数量了，导致send_message阅读比较困难，所以有了添加分页选择的需求。通过学习示例代码，勉强把功能实现了。但代码写得很丑陋，没有做到代码的复用。一时没想到怎么去优化。先搁置吧。(似乎用ConversationHandler会好些)
 ---
 
 ## 学到的东西
+### python
 - 配置文件的读取
   ```python
     import json
@@ -142,6 +143,54 @@ docker-compose up -d
   #新建
   python -m venv {环境名}
   ```
+- json文件的读写
+  ```python
+  import json
+
+  #写入
+  with open(save_path,"a",encoding='utf-8') as f:
+    f.write(json.dumps(data,ensure_ascil=False,indent=2))
+    f.write('\n')
+
+  #读取
+  with open(save_path,'r',encoding='utf-8') as f:
+    data = json.load(f)
+    messages =[]
+    for idx, obj in enumerate(data):
+        messages.append(f"{idx+1}. {obj['text']}")
+    if messages:
+        message = "\n".join(messages)
+
+  #内容判断是否为空
+  file_size = os.stat(save_path).st_size
+  if file_size == 0:
+    print("file is empty")
+  ```
+- 日志的设置
+  ```python
+  # 日志的配置
+  logger = logging.getLogger(__name__)
+  logging.basicConfig(
+      format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+      level=logging.INFO,
+  )
+  formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s') 
+
+  file_handler = logging.FileHandler(filename=warning_path,mode='a',encoding='utf-8')
+  file_handler.setFormatter(formatter)
+  file_handler.setLevel(logging.INFO)
+
+  stream_handler = logging.StreamHandler(sys.stdout)
+  stream_handler.setFormatter(formatter)  
+  stream_handler.setLevel(logging.WARNING)
+
+  logger.addHandler(stream_handler)
+  logger.addHandler(file_handler)
+  ```
+- 字符串的拼接
+  `f_line = '\n'.join(lines)`
+
+## Dokcker
 - Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
 
 - Docker的基本使用
@@ -171,53 +220,14 @@ docker-compose up -d
 
   # 查看所有的container
   ```
-- json文件的读写
-  ```python
-  import json
 
-  #写入
-  with open(save_path,"a",encoding='utf-8') as f:
-    f.write(json.dumps(data,ensure_ascil=False,indent=2))
-    f.write('\n')
-
-  #读取
-  with open(save_path,'r',encoding='utf-8') as f:
-    data = json.load(f)
-    messages =[]
-    for idx, obj in enumerate(data):
-        messages.append(f"{idx+1}. {obj['text']}")
-    if messages:
-        message = "\n".join(messages)
-
-  #内容判断是否为空
-  file_size = os.stat(save_path).st_size
-  if file_size == 0:
-    print("file is empty")
-  ```
+## python-telegram-bot
 - inlineKeyboard 的使用
-- 日志的设置
-  ```python
-  # 日志的配置
-  logger = logging.getLogger(__name__)
-  logging.basicConfig(
-      format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-      level=logging.INFO,
-  )
-  formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s') 
-
-  file_handler = logging.FileHandler(filename=warning_path,mode='a',encoding='utf-8')
-  file_handler.setFormatter(formatter)
-  file_handler.setLevel(logging.INFO)
-
-  stream_handler = logging.StreamHandler(sys.stdout)
-  stream_handler.setFormatter(formatter)  
-  stream_handler.setLevel(logging.WARNING)
-
-  logger.addHandler(stream_handler)
-  logger.addHandler(file_handler)
-  ```
-- 字符串的拼接
-  `f_line = '\n'.join(lines)`
+  - `keyboard = [[InlineKeyboardButton(f"{i}", callback_data=str(i)) for i in range(1, real_pages+1)]]`
+  - 
+- CallbackQuery. 
+  - 每个CallbackQuery都会去响应符合pattern的query.
+  - `update.callback_query.edit_message_text` 是修改发起CallbackQuery的那条。
 
 ## 参考
 - [inlinekeyboard.py](https://docs.python-telegram-bot.org/en/stable/examples.inlinekeyboard.html)
