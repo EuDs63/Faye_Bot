@@ -1,0 +1,10 @@
+# Ignore all configuration files
+*.config
+*.conf
+*.cfg
+*.ini
+*.db
+*.json
+*.yaml
+*.log
+/.idea

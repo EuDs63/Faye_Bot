@@ -1,0 +1,13 @@
+version: '3'
+services:
+  faye:
+    image: euds63/fayebot:latest
+    container_name: Faye_Bot
+    environment:
+      - http_proxy=http://172.17.0.1:7890
+      - https_proxy=http://172.17.0.1:7890
+    volumes:
+      - "./config.json:/app/config.json"
+      - "./save.json:/app/save.json"
+      - "./warning.log:/app/warning.log"
+      - "./bot.py:/app/bot.py"
