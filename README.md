@@ -8,6 +8,7 @@
 - /send : send the saved messages
 - /poetry : 发送一句诗
 - /en_poetry : 发送一首随机的英文诗
+- /bing : 根据其后所跟的prompt，使用dalle-3生成对应的图片
 
 ## command
 ```
@@ -16,6 +17,7 @@ save - save the word
 send - send the saved messages
 poetry - send a poem
 en_poetry - send a random English poem
+bing - send a picture drawn by dalle-3
 ```
 
 
