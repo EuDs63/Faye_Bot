@@ -1,0 +1,11 @@
+version: '3'
+services:
+  faye:
+    image: euds63/fayebot:latest
+    container_name: Faye_Bot
+    volumes:
+      - "./config.json:/app/config.json"
+      - "./save.json:/app/save.json"
+      - "./warning.log:/app/warning.log"
+      - "./bot.py:/app/bot.py"
+      - "./images:/app/images"
