@@ -405,31 +405,32 @@ async def send_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("Something went wrong!")
         logger.error("encounter error {} when send file".format(e))
 
-    #
-
-
+    
+# bing 绘图
 async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     bot = context.bot
-    chat_id = update.message.chat_id
     start_words = "/bing "
     if not message.text.startswith(start_words):
         return
-    print(message.from_user.id)
-    path = os.path.join("images", str(message.from_user.id))
+    s = message.text[len(start_words):].strip()
+    path = os.path.join("images", str(s))
     if not os.path.exists(path):
         os.mkdir(path)
-    s = message.text[len(start_words):].strip()
     i = ImageGen(bing_cookie)
-    # await bot.sendMessage(chat_id=message.from_user.id, text="Using bing DALL-E 3 generating images please wait")
-    images = i.get_images(s)
-    i.save_images(images, path)
-    images_count = len(list(os.listdir(path)))
-    # print(images_count)
-    index = random.randint(images_count - len(images), images_count - 1)
-    with open(os.path.join(path, str(index)) + ".jpeg", "rb") as f:
-        await bot.send_photo(message.chat.id, f, reply_to_message_id=message.message_id)
+    await bot.sendMessage(chat_id=message.from_user.id,text="Using bing DALL-E 3 generating images please wait")
+    try:
+        images = i.get_images(s)
+        i.save_images(images, path)
+        images_count = len(list(os.listdir(path)))
+        index = random.randint(images_count - len(images), images_count - 1)
+        with open(os.path.join(path, str(index)) + ".jpeg", "rb") as f:
+            await bot.send_photo(message.chat.id, f, reply_to_message_id=message.message_id)
+    except Exception as e:
+        logger.error("encounter error {} when send bing photo".format(e))
+        await bot.sendMessage(chat_id=message.from_user.id, text="The service is currently not available") 
     return
+
 
 
 # main方法
@@ -441,8 +442,8 @@ if __name__ == '__main__':
     token = config['token']
     bing_cookie = config['bing_cookie']
 
-    application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()  # 非容器
-    # application = ApplicationBuilder().token(token).build() #容器
+    # application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()  # 非容器
+    application = ApplicationBuilder().token(token).build() #容器
 
     dog_handler = CommandHandler('dog', dog)
     save_handler = CommandHandler('save', save_text)

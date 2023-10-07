@@ -8,6 +8,7 @@
 - /send : send the saved messages
 - /poetry : 发送一句诗
 - /en_poetry : 发送一首随机的英文诗
+- /bing : 根据其后所跟的prompt，使用dalle-3生成对应的图片
 
 ## command
 ```
@@ -16,6 +17,7 @@ save - save the word
 send - send the saved messages
 poetry - send a poem
 en_poetry - send a random English poem
+bing - send a picture drawn by dalle-3
 ```
 
 
@@ -235,3 +237,4 @@ docker-compose up -d
 - [errorhandlerbot.py](https://docs.python-telegram-bot.org/en/stable/examples.errorhandlerbot.html)
 - [CallbackQuery](https://docs.python-telegram-bot.org/en/stable/telegram.callbackquery.html)
 - [get_up.py](https://github.com/yihong0618/2023/blob/639e3ac9c9982edaee1481489ccd4d56b43e52f8/get_up.py)
+- [yihong0618/tg_bing_dalle: tg bing dalle-3](https://github.com/yihong0618/tg_bing_dalle/tree/main)
