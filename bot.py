@@ -10,11 +10,9 @@
 
 import random
 import traceback
-import datetime
-import datetime
+from datetime import datetime, time
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-# from BingImageCreator import ImageGen
 from telegram.ext import (
     ApplicationBuilder,
     ContextTypes,
@@ -31,10 +29,16 @@ import json
 import os
 import sys
 import html
+import time
+import schedule
+from pytz import timezone
 
 # 路径
 root_path = os.path.dirname(__file__)
 warning_path = os.path.join(root_path, 'warning.log')
+
+# 设置时区
+local_tz = timezone('Asia/Shanghai')
 
 # 日志的配置
 logger = logging.getLogger(__name__)
@@ -135,13 +139,18 @@ def get_one_sentence():
         return DEFAULT_SENTENCE
 
 
-## /poetry指令
-async def poetry(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def get_poetry_reply():
     r = get_one_sentence()
     content = r['content']
     title = r['origin']
     author = r['author']
     reply = f"\"{content}\"\n作者： {author}\n题目： {title}"
+    return reply
+
+
+## /poetry指令
+async def poetry(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    reply = get_poetry_reply()
     chat_id = update.message.chat_id
     logger.info(f"{chat_id},send a command '/poetry'")
     await context.bot.send_message(chat_id=chat_id, text=reply)
@@ -202,7 +211,7 @@ async def en_poetry(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def save_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # 获取当前时间
-        now = datetime.datetime.now()
+        now = datetime.now()
         now_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
         # 获取用户id
@@ -405,20 +414,39 @@ async def send_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("Something went wrong!")
         logger.error("encounter error {} when send file".format(e))
 
-    
-# bing 绘图
+
+
+# 根据prompt生成图片
+async def generate_image(s, context, id):
+    path = os.path.join("images", str(s))
+    if not os.path.exists(path):
+        os.mkdir(path)
+    try:
+        i = ImageGen(bing_cookie)
+        images = i.get_images(s)
+        i.save_images(images, path)
+        images_count = len(list(os.listdir(path)))
+        index = random.randint(images_count - len(images), images_count - 1)
+        with open(os.path.join(path, str(index)) + ".jpeg", "rb") as f:
+            await context.bot.send_photo(id, f)
+    except Exception as e:
+        logger.error("encounter error {} when send bing photo".format(e))
+        # await context.bot.sendMessage(chat_id=id, text="The service is currently not available")
+
+# bing绘图
 async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     bot = context.bot
     start_words = "/bing "
     if not message.text.startswith(start_words):
         return
-    s = message.text[len(start_words):].strip()
+    s = message.text[len(start_words):].strip()  # 得到prompt
+
     path = os.path.join("images", str(s))
     if not os.path.exists(path):
         os.mkdir(path)
     i = ImageGen(bing_cookie)
-    await bot.sendMessage(chat_id=message.from_user.id,text="Using bing DALL-E 3 generating images please wait")
+    await bot.sendMessage(chat_id=message.from_user.id, text="Using bing DALL-E 3 generating images please wait")
     try:
         images = i.get_images(s)
         i.save_images(images, path)
@@ -428,10 +456,32 @@ async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await bot.send_photo(message.chat.id, f, reply_to_message_id=message.message_id)
     except Exception as e:
         logger.error("encounter error {} when send bing photo".format(e))
-        await bot.sendMessage(chat_id=message.from_user.id, text="The service is currently not available") 
+        await bot.sendMessage(chat_id=message.from_user.id, text="The service is currently not available")
     return
 
 
+
+# 发送早安消息的函数
+async def send_morning_message(context):
+    id = context.job.data
+    r = get_one_sentence()
+    content = r['content']
+    title = r['origin']
+    author = r['author']
+    reply_text = f"\"{content}\"\n作者： {author}\n题目： {title}"
+
+    reply = f"今天随到的诗句是：\n{reply_text}"
+    await context.bot.send_message(chat_id=context.job.data, text=reply)
+    await generate_image(content, context, id)
+
+async def setup_morning_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 设置时刻
+    now = datetime.now(local_tz).time()
+    action_time = now.replace(9, 0, 0, 0, timezone('Asia/Shanghai'))
+
+    job = context.job_queue.run_daily(send_morning_message, action_time, data=update.message.from_user.id)
+    logger.info(job)
+    await context.bot.send_message(chat_id=update.message.from_user.id, text="Welcome to use Faye")
 
 # main方法
 if __name__ == '__main__':
@@ -442,9 +492,11 @@ if __name__ == '__main__':
     token = config['token']
     bing_cookie = config['bing_cookie']
 
-    # application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()  # 非容器
-    application = ApplicationBuilder().token(token).build() #容器
+    # application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(
+    #     proxy_url).build()  # 非容器
+    application = ApplicationBuilder().token(token).build()  # 容器
 
+    start_handler = CommandHandler('start', setup_morning_message)
     dog_handler = CommandHandler('dog', dog)
     save_handler = CommandHandler('save', save_text)
     send_handler = CommandHandler('send', send)
@@ -456,6 +508,8 @@ if __name__ == '__main__':
 
     bing_handler = CommandHandler('bing', reply_dalle_image)
 
+    application.add_handler(start_handler)
+    application.add_handler(send_handler)
     application.add_handler(dog_handler)
     application.add_handler(save_handler)
     application.add_handler(send_handler)
