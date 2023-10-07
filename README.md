@@ -2,6 +2,7 @@
 
 ## 介绍
 基于python的telegram bot，现支持功能
+- /start 开启每日问候
 - /dog 返回一张随机的狗的照片
 - 通过api接入了ChatGPT，支持直接对话
 - /save : save the word
@@ -12,6 +13,7 @@
 
 ## command
 ```
+start - greet everyday
 dog - send a dog picture
 save - save the word
 send - send the saved messages
@@ -34,8 +36,9 @@ bing - send a picture drawn by dalle-3
 - ~~[ ] 扩展poestry指令的功能，添加外国诗句，并增加判断：如果是外国诗，应返回原文和译文~~
 - [x] 添加指令 可以返回一首随机的英文诗
 - [ ] 使用[bing画图](https://www.bing.com/create)，给诗句配图
-- [ ] 定时发送诗句
-- [ ] 增强稳定性。bot会因为网络不够稳定导致需要重启。我目前的解决方法是使用crontab来定时重启，但觉得应该有更好的方法。
+- [x] 定时发送诗句 -> 每日问候，同时作为prompt进行绘图
+- [x] 增强稳定性。bot会因为网络不够稳定导致需要重启。~~我目前的解决方法是使用crontab来定时重启~~，但觉得应该有更好的方法。目前将bot部署在美国的服务器上，暂无出现需要重启的情况。
+- [ ] send_message 功能无法正常使用，待修复
 
 ## 部署
 提供了两种方法
@@ -114,6 +117,7 @@ docker-compose up -d
   date >> restart.txt
   ```
 - 5月2日，由于我保存的文字已经有一定数量了，导致send_message阅读比较困难，所以有了添加分页选择的需求。通过学习示例代码，勉强把功能实现了。但代码写得很丑陋，没有做到代码的复用。一时没想到怎么去优化。先搁置吧。(似乎用ConversationHandler会好些)
+- 10月7日 这两天因为azure学生包资格通过了，得到了一台美国的服务器，于是给bot新增了bing绘图，每日问候功能。同时还想修改下代码，提高代码的复用性。但似乎却越改越烂。留给以后的我吧。
 ---
 
 ## 学到的东西
@@ -192,7 +196,10 @@ docker-compose up -d
 - 字符串的拼接
   `f_line = '\n'.join(lines)`
 
-## Dokcker
+### curl
+`curl https://raw.githubusercontent.com/EuDs63/Faye_Bot/main/bot.py`
+
+### Dokcker
 - Docker的配置文件，Windows下的路径为：`C:\Users\{username}\.docker\daemon.json`
 
 - Docker的基本使用
@@ -223,7 +230,7 @@ docker-compose up -d
   # 查看所有的container
   ```
 
-## python-telegram-bot
+### python-telegram-bot
 - inlineKeyboard 的使用
   - `keyboard = [[InlineKeyboardButton(f"{i}", callback_data=str(i)) for i in range(1, real_pages+1)]]`
   - 
@@ -238,3 +245,4 @@ docker-compose up -d
 - [CallbackQuery](https://docs.python-telegram-bot.org/en/stable/telegram.callbackquery.html)
 - [get_up.py](https://github.com/yihong0618/2023/blob/639e3ac9c9982edaee1481489ccd4d56b43e52f8/get_up.py)
 - [yihong0618/tg_bing_dalle: tg bing dalle-3](https://github.com/yihong0618/tg_bing_dalle/tree/main)
+- [JobQueue - python-telegram-bot v20.6](https://docs.python-telegram-bot.org/en/v20.6/telegram.ext.jobqueue.html#telegram.ext.JobQueue.run_daily.params.callback)
