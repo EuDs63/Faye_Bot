@@ -492,9 +492,9 @@ if __name__ == '__main__':
     token = config['token']
     bing_cookie = config['bing_cookie']
 
-    # application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(
-    #     proxy_url).build()  # 非容器
-    application = ApplicationBuilder().token(token).build()  # 容器
+    application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(
+        proxy_url).build()  # 非容器
+    # application = ApplicationBuilder().token(token).build()  # 容器
 
     start_handler = CommandHandler('start', setup_morning_message)
     dog_handler = CommandHandler('dog', dog)
