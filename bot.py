@@ -12,7 +12,7 @@ import random
 import traceback
 from datetime import datetime, time
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import (
     ApplicationBuilder,
     ContextTypes,
@@ -31,6 +31,7 @@ import sys
 import html
 import time
 import schedule
+from threading import Thread
 from pytz import timezone
 
 # 路径
@@ -415,7 +416,6 @@ async def send_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error("encounter error {} when send file".format(e))
 
 
-
 # 根据prompt生成图片
 async def generate_image(s, context, id):
     path = os.path.join("images", str(s))
@@ -433,6 +433,13 @@ async def generate_image(s, context, id):
         logger.error("encounter error {} when send bing photo".format(e))
         # await context.bot.sendMessage(chat_id=id, text="The service is currently not available")
 
+
+def save_images(i, images, path):
+    # save the images in another thread call
+    print("Running save images")
+    i.save_images(images, path)
+
+
 # bing绘图
 async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -443,6 +450,7 @@ async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     s = message.text[len(start_words):].strip()  # 得到prompt
 
     path = os.path.join("images", str(s))
+    # 如果没有这个文件夹，就创建一个
     if not os.path.exists(path):
         os.mkdir(path)
     i = ImageGen(bing_cookie)
@@ -450,15 +458,26 @@ async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         images = i.get_images(s)
         i.save_images(images, path)
-        images_count = len(list(os.listdir(path)))
-        index = random.randint(images_count - len(images), images_count - 1)
-        with open(os.path.join(path, str(index)) + ".jpeg", "rb") as f:
-            await bot.send_photo(message.chat.id, f, reply_to_message_id=message.message_id)
+        photos_list = [InputMediaPhoto(i) for i in images]
+        Thread(target=save_images, args=(images, path)).start()
+
+        if photos_list:
+            context.bot.send_media_group(
+                chat_id=message.chat_id,
+                media=photos_list,
+                reply_to_message_id=message.message_id
+            )
+        else:
+            context.bot.send_message(message.from_user.id, "Your prompt generated no images")
+
+        # images_count = len(list(os.listdir(path)))
+        # index = random.randint(images_count - len(images), images_count - 1)
+        # with open(os.path.join(path, str(index)) + ".jpeg", "rb") as f:
+        #     await bot.send_photo(message.chat.id, f, reply_to_message_id=message.message_id)
     except Exception as e:
         logger.error("encounter error {} when send bing photo".format(e))
         await bot.sendMessage(chat_id=message.from_user.id, text="The service is currently not available")
     return
-
 
 
 # 发送早安消息的函数
@@ -474,6 +493,7 @@ async def send_morning_message(context):
     await context.bot.send_message(chat_id=context.job.data, text=reply)
     await generate_image(content, context, id)
 
+
 async def setup_morning_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 设置时刻
     now = datetime.now(local_tz).time()
@@ -482,6 +502,16 @@ async def setup_morning_message(update: Update, context: ContextTypes.DEFAULT_TY
     job = context.job_queue.run_daily(send_morning_message, action_time, data=update.message.from_user.id)
     logger.info(job)
     await context.bot.send_message(chat_id=update.message.from_user.id, text="Welcome to use Faye")
+
+
+# 初始化函数，在机器人启动时执行
+# def initialize_bot(context: CallbackContext):
+#     # 设置时刻
+#     now = datetime.now(local_tz).time()
+#     action_time = now.replace(9, 0, 0, 0, timezone('Asia/Shanghai'))
+#
+#     job = context.job_queue.run_daily(send_morning_message, action_time, data=update.message.from_user.id)
+#     logger.info(job)
 
 # main方法
 if __name__ == '__main__':
