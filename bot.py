@@ -459,10 +459,10 @@ async def reply_dalle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         images = i.get_images(s)
         i.save_images(images, path)
         photos_list = [InputMediaPhoto(i) for i in images]
-        Thread(target=save_images, args=(images, path)).start()
+        Thread(target=save_images, args=(i, images, path)).start()
 
         if photos_list:
-            context.bot.send_media_group(
+            await context.bot.send_media_group(
                 chat_id=message.chat_id,
                 media=photos_list,
                 reply_to_message_id=message.message_id
@@ -522,9 +522,9 @@ if __name__ == '__main__':
     token = config['token']
     bing_cookie = config['bing_cookie']
 
-    application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(
-        proxy_url).build()  # 非容器
-    # application = ApplicationBuilder().token(token).build()  # 容器
+    # application = ApplicationBuilder().token(token).proxy_url(proxy_url).get_updates_proxy_url(
+    #     proxy_url).build()  # 非容器
+    application = ApplicationBuilder().token(token).build()  # 容器
 
     start_handler = CommandHandler('start', setup_morning_message)
     dog_handler = CommandHandler('dog', dog)
